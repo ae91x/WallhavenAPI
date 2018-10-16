@@ -59,5 +59,12 @@ namespace WallhavenAPI
 
             return retval;
         }
+
+        public static byte[] GetFile(string url)
+        {
+            var data = _webClient.DownloadData(url);
+
+            return data;
+        }
     }
 }
