@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
-using WallhavenAPI.Structs;
 using WallhavenAPI.Helpers;
-using System.Xml;
 using System.Text.RegularExpressions;
 
 namespace WallhavenAPI
@@ -13,12 +11,27 @@ namespace WallhavenAPI
         private static CookieAwareWebClient _webClient = new CookieAwareWebClient();
         private static Regex WallpaperIdRegex = new Regex("(?<=data-wallpaper-id=\").*?(?=\")");
 
+        private const string COOKIE_URI = "https://alpha.wallhaven.cc";
+        private const string LOGIN_URI = "https://alpha.wallhaven.cc/auth/login";
         private const string SEARCH_URI = "https://alpha.wallhaven.cc/search";
-        private const string FULL_IMAGE_BASE_URI = "https://wallpapers.wallhaven.cc/wallpapers/full/wallhaven-";
+        private const string FULL_IMAGE_URI_TEMPLATE = "https://wallpapers.wallhaven.cc/wallpapers/full/wallhaven-{0}.jpg";
 
-        public static void Login(string username, string password)
+        public static bool IsLoggedIn()
         {
-            _webClient.Login("https://alpha.wallhaven.cc/auth/login", new System.Collections.Specialized.NameValueCollection() { { "username", username }, { "password", password } });
+            foreach(Cookie cookie in _webClient.CookieContainer.GetCookies(new Uri(COOKIE_URI)))
+            {
+                if (cookie.Name.StartsWith("remember_") && !cookie.Expired)
+                    return true;
+            }
+
+            return false;
+        }
+
+        public static bool Login(string username, string password)
+        {
+            _webClient.Login(LOGIN_URI, new System.Collections.Specialized.NameValueCollection() { { "username", username }, { "password", password } });
+
+            return IsLoggedIn();
         }
 
         public static List<string> Search(Query query)
@@ -37,8 +50,8 @@ namespace WallhavenAPI
             if (query.Colors?.Length > 0)
                 _webClient.QueryString.Add("colors", String.Join(",", query.Colors));
 
-            if (!String.IsNullOrEmpty(query.Ratio))
-                _webClient.QueryString.Add("ratios", query.Ratio);
+            if (query.Ratios?.Length > 0)
+                _webClient.QueryString.Add("ratios", String.Join(",", query.Ratios));
 
             if (query.Resolutions?.Length > 0)
             {
@@ -55,7 +68,7 @@ namespace WallhavenAPI
             var retval = new List<string>();
 
             foreach (var match in matches)
-                retval.Add(FULL_IMAGE_BASE_URI + match.ToString() + ".jpg");
+                retval.Add(String.Format(FULL_IMAGE_URI_TEMPLATE, match));
 
             return retval;
         }

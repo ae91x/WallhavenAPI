@@ -15,8 +15,7 @@ namespace System.Net
             request.Method = "POST";
             request.ContentType = "application/x-www-form-urlencoded";
 
-            var query = string.Join("&",
-              loginData.Cast<string>().Select(key => $"{key}={loginData[key]}"));
+            var query = string.Join("&", loginData.Cast<string>().Select(key => $"{key}={loginData[key]}"));
 
             var buffer = Encoding.ASCII.GetBytes(query);
             request.ContentLength = buffer.Length;
