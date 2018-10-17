@@ -18,7 +18,7 @@ namespace WallhavenAPI
 
         public static bool IsLoggedIn()
         {
-            foreach(Cookie cookie in _webClient.CookieContainer.GetCookies(new Uri(COOKIE_URI)))
+            foreach (Cookie cookie in _webClient.CookieContainer.GetCookies(new Uri(COOKIE_URI)))
             {
                 if (cookie.Name.StartsWith("remember_") && !cookie.Expired)
                     return true;
