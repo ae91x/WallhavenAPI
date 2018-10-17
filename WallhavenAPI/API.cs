@@ -35,9 +35,7 @@ namespace WallhavenAPI
         }
 
         public static List<string> Search(Query query)
-        {
-            _webClient.BaseAddress = SEARCH_URI;
-
+        {   
             _webClient.QueryString.Add("page", query.Page.ToString());
             _webClient.QueryString.Add("categories", query.Categories.ToBitString());
             _webClient.QueryString.Add("purity", query.Purities.ToBitString());
@@ -61,7 +59,8 @@ namespace WallhavenAPI
                     _webClient.QueryString.Add("atleast", query.Resolutions[0]);
             }
 
-            var result = _webClient.DownloadString(String.Empty);
+            var result = _webClient.DownloadString(SEARCH_URI);
+            _webClient.QueryString.Clear();
 
             var matches = WallpaperIdRegex.Matches(result);
 
