@@ -10,6 +10,7 @@ namespace WallhavenAPI
     {
         private static CookieAwareWebClient _webClient = new CookieAwareWebClient();
         private static Regex WallpaperIdRegex = new Regex("(?<=data-wallpaper-id=\").*?(?=\")");
+        private static string[] AlternativeExtensions = new string[] { "png", "jpeg" };
 
         private const string COOKIE_URI = "https://alpha.wallhaven.cc";
         private const string LOGIN_URI = "https://alpha.wallhaven.cc/auth/login";
@@ -74,7 +75,35 @@ namespace WallhavenAPI
 
         public static byte[] GetFile(string url)
         {
-            var data = _webClient.DownloadData(url);
+            byte[] data = null;
+            int alternativeExtensionsIx = 0;
+
+            while(data == null)
+            {
+                try
+                {
+                    data = _webClient.DownloadData(url);
+                }
+                catch(WebException ex)
+                {
+                    if (ex.Status == WebExceptionStatus.ProtocolError)
+                    {
+                        var response = ex.Response as HttpWebResponse;
+                        if (response != null && response.StatusCode == HttpStatusCode.NotFound && alternativeExtensionsIx < AlternativeExtensions.Length)
+                        {
+                            url = url.Substring(0, url.Length - (System.IO.Path.GetExtension(url).Length - 1)) + AlternativeExtensions[alternativeExtensionsIx++];
+                        }
+                        else
+                        {
+                            throw ex;
+                        }
+                    }
+                    else
+                    {
+                        throw ex;
+                    }
+                }
+            }
 
             return data;
         }
